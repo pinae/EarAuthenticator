@@ -1,0 +1,5 @@
+<resources>
+    <declare-styleable name="EarTouchArea">
+        <attr name="earPossible" format="boolean" />
+    </declare-styleable>
+</resources>
