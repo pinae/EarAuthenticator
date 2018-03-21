@@ -11,4 +11,8 @@ class Tuple {
         this.x = x;
         this.y = y;
     }
+
+    public double getDistance(Tuple p) {
+        return Math.sqrt((x-p.x)*(x-p.x)+(y-p.y)*(y-p.y));
+    }
 }
