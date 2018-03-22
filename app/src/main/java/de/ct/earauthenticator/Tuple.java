@@ -5,14 +5,14 @@ package de.ct.earauthenticator;
  */
 
 class Tuple {
-    public final float x;
-    public final float y;
+    public float x;
+    public float y;
     public Tuple(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
-    public double getDistance(Tuple p) {
-        return Math.sqrt((x-p.x)*(x-p.x)+(y-p.y)*(y-p.y));
+    public float getDistance(Tuple p) {
+        return (float) Math.sqrt((x-p.x)*(x-p.x)+(y-p.y)*(y-p.y));
     }
 }

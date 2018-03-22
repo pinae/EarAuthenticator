@@ -18,9 +18,18 @@ import java.util.Map;
  */
 public class EarTouchArea extends View {
     private LinkedHashMap<Integer, Tuple> mTouchPoints;
-    private Paint mBackgroundPaint, mTouchPointPaint;
+    private Paint mBackgroundPaint, mTouchPointPaint, mLinePaint;
     private boolean earPossible;
     private Rect wholeCanvasRect;
+    private Tuple top_point = new Tuple(0, 0);
+    private Tuple bottom_point = new Tuple(0, 0);
+    private float maxDistance;
+    private float minDw = 0;
+    private float minDwDh = 0;
+    private float maxDw = 0;
+    private float maxDwDh = 0;
+    private Tuple minDwStart = new Tuple(0, 0);
+    private Tuple maxDwStart = new Tuple(0, 0);
 
     public EarTouchArea(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -47,6 +56,9 @@ public class EarTouchArea extends View {
         mTouchPointPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mTouchPointPaint.setStyle(Paint.Style.FILL);
         mTouchPointPaint.setColor(0xffbadaff);
+        mLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mLinePaint.setStrokeWidth(4);
+        mLinePaint.setColor(0xffffffff);
         mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mBackgroundPaint.setStyle(Paint.Style.FILL);
         mBackgroundPaint.setColor(0xff000000);
@@ -64,7 +76,14 @@ public class EarTouchArea extends View {
             canvas.drawCircle(p.x, p.y,
                     (float) 40.0, mTouchPointPaint);
         }
-        // Align and draw ear graphic
+        // draw measurement lines and labels
+        canvas.drawLine(bottom_point.x, bottom_point.y, top_point.x, top_point.y, mLinePaint);
+        canvas.drawLine(minDwStart.x, minDwStart.y,
+                minDwStart.x - minDw * (top_point.y - bottom_point.y),
+                minDwStart.y + minDw * (top_point.x - bottom_point.x), mLinePaint);
+        canvas.drawLine(maxDwStart.x, maxDwStart.y,
+                maxDwStart.x - maxDw * (top_point.y - bottom_point.y),
+                maxDwStart.y + maxDw * (top_point.x - bottom_point.x), mLinePaint);
 
 
         /*int paddingLeft = getPaddingLeft();
@@ -88,16 +107,16 @@ public class EarTouchArea extends View {
 
     private void getEarMeasures() {
         // calculate max distance
-        double maxDistance = 0;
-        Tuple top_point = mTouchPoints.get(0);
-        Tuple bottom_point = mTouchPoints.get(mTouchPoints.size()-1);
+        maxDistance = 0;
+        top_point = mTouchPoints.get(0);
+        bottom_point = mTouchPoints.get(mTouchPoints.size()-1);
         for (Map.Entry<Integer, Tuple> entry1 : mTouchPoints.entrySet()) {
             int key = entry1.getKey();
             Tuple p1 = entry1.getValue();
             for (Map.Entry<Integer, Tuple> entry2 : mTouchPoints.entrySet()) {
                 if (entry2.getKey() != key) {
                     Tuple p2 = entry2.getValue();
-                    double entry_distance = p1.getDistance(p2);
+                    float entry_distance = p1.getDistance(p2);
                     if (entry_distance >= maxDistance) {
                         maxDistance = entry_distance;
                         if (p1.y <= p2.y) {
@@ -112,17 +131,16 @@ public class EarTouchArea extends View {
             }
         }
         // calculate rightmost and leftmost point
-        double minDw = 0;
-        double minDwDh = 0;
-        double maxDw = 0;
-        double maxDwDh = 0;
+        minDw = 0;
+        minDwDh = 0;
+        maxDw = 0;
+        maxDwDh = 0;
         for (Map.Entry<Integer, Tuple> entry1 : mTouchPoints.entrySet()) {
-            int key = entry1.getKey();
+            //int key = entry1.getKey();
             Tuple p = entry1.getValue();
             Tuple h = new Tuple(top_point.x - bottom_point.x, top_point.y - bottom_point.y);
-            double d_h = (p.y - bottom_point.y - h.x * (p.x - bottom_point.x) / (-1 * h.y)) /
-                    (h.y + h.x * h.x / (-1 * h.y));
-            double d_w = (p.x - bottom_point.x - d_h * h.x) / (-1 * h.y);
+            float d_h = (-1*bottom_point.x*h.x+h.y*(p.y-bottom_point.y)+p.x*h.x)/(h.x*h.x+h.y*h.y);
+            float d_w = (h.y*(bottom_point.x-p.x)-bottom_point.y*h.x+p.y*h.x)/(h.x*h.x+h.y*h.y);
             if (d_w <= minDw) {
                 minDw = d_w;
                 minDwDh = d_h;
@@ -132,11 +150,15 @@ public class EarTouchArea extends View {
                 maxDwDh = d_h;
             }
         }
-        Log.d("Ear measures", "h: " + Double.toString(maxDistance) +
+        /*Log.d("Ear measures", "h: " + Double.toString(maxDistance) +
                 " , min d_w: " + Double.toString(minDw) +
                 " , min d_w_d_h: " + Double.toString(minDwDh) +
                 " , max d_w: " + Double.toString(maxDw) +
-                " , max d_w_d_h: " + Double.toString(maxDwDh));
+                " , max d_w_d_h: " + Double.toString(maxDwDh));*/
+        minDwStart.x = bottom_point.x + minDwDh * (top_point.x - bottom_point.x);
+        minDwStart.y = bottom_point.y + minDwDh * (top_point.y - bottom_point.y);
+        maxDwStart.x = bottom_point.x + maxDwDh * (top_point.x - bottom_point.x);
+        maxDwStart.y = bottom_point.y + maxDwDh * (top_point.y - bottom_point.y);
     }
 
     private void updatePointerPositions(MotionEvent event) {
@@ -146,12 +168,12 @@ public class EarTouchArea extends View {
             float y = event.getY(i);
             mTouchPoints.put(pointerID, new Tuple(x, y));
         }
-        for (Map.Entry<Integer, Tuple> entry : mTouchPoints.entrySet()) {
+        /*for (Map.Entry<Integer, Tuple> entry : mTouchPoints.entrySet()) {
             int key = entry.getKey();
             Tuple p = entry.getValue();
             Log.d("TouchPoint", Integer.toString(key) + ": (" + Float.toString(p.x) +
                     ", " + Float.toString(p.y) + ")");
-        }
+        }*/
         getEarMeasures();
     }
 
