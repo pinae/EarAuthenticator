@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
@@ -30,6 +31,9 @@ public class EarTouchArea extends View {
     private float maxDwDh = 0;
     private Tuple minDwStart = new Tuple(0, 0);
     private Tuple maxDwStart = new Tuple(0, 0);
+    private boolean trainMode = false;
+    private LinkedList<EarDataset> mTrainingData = new LinkedList<>();
+    OnTrainFinishedEventListener mTrainFinishedListener;
 
     public EarTouchArea(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -63,6 +67,14 @@ public class EarTouchArea extends View {
         mBackgroundPaint.setStyle(Paint.Style.FILL);
         mBackgroundPaint.setColor(0xff000000);
         wholeCanvasRect = new Rect(0, 0, getWidth(), getHeight());
+    }
+
+    public interface OnTrainFinishedEventListener {
+        void onEvent();
+    }
+
+    public void setTrainFinishedEventListener(OnTrainFinishedEventListener eventListener) {
+        mTrainFinishedListener = eventListener;
     }
 
     @Override
@@ -105,9 +117,12 @@ public class EarTouchArea extends View {
         wholeCanvasRect.set(0, 0, w, h);
     }
 
-    private void getEarMeasures() {
+    private EarDataset getEarMeasures() {
         // calculate max distance
         maxDistance = 0;
+        if (mTouchPoints.size() < 2) {
+            return new EarDataset(0, 0, 0, 0,0);
+        }
         top_point = mTouchPoints.get(0);
         bottom_point = mTouchPoints.get(mTouchPoints.size()-1);
         for (Map.Entry<Integer, Tuple> entry1 : mTouchPoints.entrySet()) {
@@ -150,15 +165,11 @@ public class EarTouchArea extends View {
                 maxDwDh = d_h;
             }
         }
-        /*Log.d("Ear measures", "h: " + Double.toString(maxDistance) +
-                " , min d_w: " + Double.toString(minDw) +
-                " , min d_w_d_h: " + Double.toString(minDwDh) +
-                " , max d_w: " + Double.toString(maxDw) +
-                " , max d_w_d_h: " + Double.toString(maxDwDh));*/
         minDwStart.x = bottom_point.x + minDwDh * (top_point.x - bottom_point.x);
         minDwStart.y = bottom_point.y + minDwDh * (top_point.y - bottom_point.y);
         maxDwStart.x = bottom_point.x + maxDwDh * (top_point.x - bottom_point.x);
         maxDwStart.y = bottom_point.y + maxDwDh * (top_point.y - bottom_point.y);
+        return new EarDataset(maxDistance, minDw, minDwDh, maxDw, maxDwDh);
     }
 
     private void updatePointerPositions(MotionEvent event) {
@@ -168,13 +179,29 @@ public class EarTouchArea extends View {
             float y = event.getY(i);
             mTouchPoints.put(pointerID, new Tuple(x, y));
         }
-        /*for (Map.Entry<Integer, Tuple> entry : mTouchPoints.entrySet()) {
-            int key = entry.getKey();
-            Tuple p = entry.getValue();
-            Log.d("TouchPoint", Integer.toString(key) + ": (" + Float.toString(p.x) +
-                    ", " + Float.toString(p.y) + ")");
-        }*/
-        getEarMeasures();
+        EarDataset newEar = getEarMeasures();
+        //Log.d("Ear measures", newEar.toString());
+        // Add new training dataset
+        if (trainMode && (newEar.minDw < -0.05 || newEar.maxDw > 0.05) &&
+                mTouchPoints.size() >= 4) {
+            mTrainingData.add(newEar);
+            trainMode = false;
+            mTrainFinishedListener.onEvent();
+        }
+        // Check if this is a correct ear
+        if (!trainMode) {
+            float minErr = 10000;
+            for (EarDataset correctEar : mTrainingData) {
+                float err = correctEar.squaredNormalizedError(newEar);
+                if (err <= minErr) {
+                    minErr = err;
+                }
+            }
+            //Log.d("Min ear err", Float.toString(minErr));
+            if (minErr < 0.01) {
+                Log.d("Ear Recognized! Error: ", Float.toString(minErr));
+            }
+        }
     }
 
     @Override
@@ -213,5 +240,9 @@ public class EarTouchArea extends View {
 
     public boolean getEarPossible() {
         return earPossible;
+    }
+
+    public void startTrainMode() {
+        trainMode = true;
     }
 }
