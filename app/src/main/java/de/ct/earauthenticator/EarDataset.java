@@ -24,7 +24,7 @@ public class EarDataset {
     }
 
     public float squaredNormalizedError(EarDataset x) {
-        return sq(h/500-x.h/500) +
+        return sq(h/900-x.h/900) +
                 sq(minDw-x.minDw) + sq(minDwDh-x.minDwDh) +
                 sq(maxDw-x.maxDw) + sq(maxDwDh-x.maxDwDh);
     }

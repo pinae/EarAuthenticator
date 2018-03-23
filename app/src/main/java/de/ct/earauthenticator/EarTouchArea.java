@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -12,6 +13,7 @@ import android.view.View;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -20,6 +22,7 @@ import java.util.Map;
 public class EarTouchArea extends View {
     private LinkedHashMap<Integer, Tuple> mTouchPoints;
     private Paint mBackgroundPaint, mTouchPointPaint, mLinePaint;
+    private Paint mValuePaint, mGreenPaint, mRedPaint;
     private boolean earPossible;
     private Rect wholeCanvasRect;
     private Tuple top_point = new Tuple(0, 0);
@@ -62,7 +65,12 @@ public class EarTouchArea extends View {
         mTouchPointPaint.setColor(0xffbadaff);
         mLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mLinePaint.setStrokeWidth(4);
+        mLinePaint.setTextSize(48);
         mLinePaint.setColor(0xffffffff);
+        mValuePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mValuePaint.setTextSize(48);
+        mValuePaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
+        mValuePaint.setColor(0xffffffff);
         mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mBackgroundPaint.setStyle(Paint.Style.FILL);
         mBackgroundPaint.setColor(0xff000000);
@@ -96,7 +104,47 @@ public class EarTouchArea extends View {
         canvas.drawLine(maxDwStart.x, maxDwStart.y,
                 maxDwStart.x - maxDw * (top_point.y - bottom_point.y),
                 maxDwStart.y + maxDw * (top_point.x - bottom_point.x), mLinePaint);
-
+        if (maxDwDh < 0.5 || maxDw < 0.01) {
+            canvas.drawText(String.format(Locale.GERMANY, "%.0f", maxDistance / 100),
+                    (float) (bottom_point.x + 0.7 * (top_point.x - bottom_point.x) -
+                            30 * (top_point.y - bottom_point.y) / maxDistance),
+                    (float) (bottom_point.y + 0.7 * (top_point.y - bottom_point.y) +
+                            30 * (top_point.x - bottom_point.x) / maxDistance), mLinePaint);
+        } else {
+            canvas.drawText(String.format(Locale.GERMANY, "%.0f", maxDistance / 100),
+                    (float) (bottom_point.x + 0.3 * (top_point.x - bottom_point.x) -
+                            30 * (top_point.y - bottom_point.y) / maxDistance),
+                    (float) (bottom_point.y + 0.3 * (top_point.y - bottom_point.y) +
+                            30 * (top_point.x - bottom_point.x) / maxDistance), mLinePaint);
+        }
+        if (minDw < -0.01) {
+            canvas.drawText(String.format(Locale.GERMANY, "%.0f", minDw * -10),
+                    (float) (minDwStart.x - 0.5 * minDw * (top_point.y - bottom_point.y) +
+                            15 * (top_point.x - bottom_point.x) / maxDistance),
+                    (float) (minDwStart.y + 0.5 * minDw * (top_point.x - bottom_point.x) +
+                            15 * (top_point.y - bottom_point.y) / maxDistance),
+                    mLinePaint);
+        }
+        if (maxDw > 0.01) {
+            canvas.drawText(String.format(Locale.GERMANY, "%.0f", maxDw * 10),
+                    (float) (maxDwStart.x - 0.5 * maxDw * (top_point.y - bottom_point.y) +
+                            15 * (top_point.x - bottom_point.x) / maxDistance),
+                    (float) (maxDwStart.y + 0.5 * maxDw * (top_point.x - bottom_point.x) +
+                            15 * (top_point.y - bottom_point.y) / maxDistance),
+                    mLinePaint);
+        }
+        float alpha = (float) (Math.atan(-1*minDw/minDwDh) / 6.283 * 360);
+        if (maxDwDh > 0.01) {
+            alpha = (float) (Math.atan(maxDw/maxDwDh) / 6.283 * 360);
+        }
+        canvas.drawText("α: " + String.format(Locale.GERMANY, "%.1f", alpha),
+                canvas.getWidth()/2,
+                canvas.getHeight()-140, mValuePaint);
+        canvas.drawText("β: " + String.format(Locale.GERMANY, "%.1f",
+                0104.2018 * Math.sin(maxDistance / 9 *
+                        Math.max(maxDw/maxDwDh, -1*minDw/minDwDh))),
+                canvas.getWidth()/2,
+                canvas.getHeight()-60, mValuePaint);
 
         /*int paddingLeft = getPaddingLeft();
         int paddingTop = getPaddingTop();
