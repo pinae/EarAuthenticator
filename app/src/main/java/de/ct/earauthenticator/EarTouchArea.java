@@ -38,6 +38,7 @@ public class EarTouchArea extends View {
     private LinkedList<EarDataset> mTrainingData = new LinkedList<>();
     private boolean earRecognized = false;
     OnTrainFinishedEventListener mTrainFinishedListener;
+    OnEarVerifiedListener mEarVerifiedListener;
 
     public EarTouchArea(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -98,6 +99,14 @@ public class EarTouchArea extends View {
 
     public void setTrainFinishedEventListener(OnTrainFinishedEventListener eventListener) {
         mTrainFinishedListener = eventListener;
+    }
+
+    public interface OnEarVerifiedListener {
+        void onEvent();
+    }
+
+    public void setEarVerifiedEventListener(OnEarVerifiedListener eventListener) {
+        mEarVerifiedListener = eventListener;
     }
 
     @Override
@@ -247,7 +256,7 @@ public class EarTouchArea extends View {
         //Log.d("Ear measures", newEar.toString());
         // Add new training dataset
         if (trainMode && (newEar.minDw < -0.05 || newEar.maxDw > 0.05) &&
-                mTouchPoints.size() >= 4) {
+                mTouchPoints.size() >= 4 && earPossible) {
             mTrainingData.add(newEar);
             trainMode = false;
             mTrainFinishedListener.onEvent();
@@ -262,9 +271,10 @@ public class EarTouchArea extends View {
                 }
             }
             //Log.d("Min ear err", Float.toString(minErr));
-            if (minErr < 0.01) {
+            if (minErr < 0.005 && earPossible) {
                 earRecognized = true;
-                Log.d("Ear Recognized! Error: ", Float.toString(minErr));
+                Log.d("Ear Recognized! Error ", Float.toString(minErr));
+                mEarVerifiedListener.onEvent();
             } else {
                 earRecognized = false;
             }

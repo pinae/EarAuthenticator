@@ -50,17 +50,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onEvent() {
                 plusButton.setVisibility(View.VISIBLE);
                 saveTrainingData();
-                // Vibrate for 250 milliseconds
-                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    v.vibrate(VibrationEffect.createOneShot(250,
-                            VibrationEffect.DEFAULT_AMPLITUDE));
-                }else{
-                    //deprecated in API 26
-                    v.vibrate(250);
-                }
+                Log.d("Training finished.", "Data Saved.");
+                vibrate(250);
             }
         });
+        mEarTouchArea.setEarVerifiedEventListener(new EarTouchArea.OnEarVerifiedListener() {
+            @Override
+            public void onEvent() {
+                vibrate(10);
+            }
+        });
+    }
+
+    private void vibrate(int duration) {
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(duration,
+                    VibrationEffect.DEFAULT_AMPLITUDE));
+        }else{
+            //deprecated in API 26
+            v.vibrate(duration);
+        }
     }
 
     private void saveTrainingData() {
