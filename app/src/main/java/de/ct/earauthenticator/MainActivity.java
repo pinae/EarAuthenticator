@@ -12,6 +12,8 @@ import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor mProximity;
     private static final int SENSOR_SENSITIVITY = 4;
     private EarTouchArea mEarTouchArea;
+    private MenuItem mClearItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onEvent() {
                 plusButton.setVisibility(View.VISIBLE);
                 saveTrainingData();
+                mClearItem.setVisible(true);
                 Log.d("Training finished.", "Data Saved.");
                 vibrate(250);
             }
@@ -130,4 +134,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.activity_main_actions, menu);
+        mClearItem = menu.findItem(R.id.action_clear);
+        mClearItem.setVisible(this.mEarTouchArea.getTrainingData().size() > 0);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here.
+        int id = item.getItemId();
+        if (id == R.id.action_clear) {
+            SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.clear();
+            editor.apply();
+            mEarTouchArea.setTrainingData(new LinkedList<EarDataset>());
+            mClearItem.setVisible(false);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

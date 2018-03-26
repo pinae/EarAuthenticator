@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">c\'t openEar</string>
+    <string name="clear_button">clear training data</string>
 </resources>
