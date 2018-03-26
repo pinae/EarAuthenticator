@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.os.CountDownTimer;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -37,6 +38,7 @@ public class EarTouchArea extends View {
     private boolean trainMode = false;
     private LinkedList<EarDataset> mTrainingData = new LinkedList<>();
     private boolean earRecognized = false;
+    private CountDownTimer mTimer;
     OnTrainFinishedEventListener mTrainFinishedListener;
     OnEarVerifiedListener mEarVerifiedListener;
 
@@ -252,14 +254,25 @@ public class EarTouchArea extends View {
             float y = event.getY(i);
             mTouchPoints.put(pointerID, new Tuple(x, y));
         }
-        EarDataset newEar = getEarMeasures();
+        final EarDataset newEar = getEarMeasures();
         //Log.d("Ear measures", newEar.toString());
         // Add new training dataset
         if (trainMode && (newEar.minDw < -0.05 || newEar.maxDw > 0.05) &&
                 mTouchPoints.size() >= 4 && earPossible) {
-            mTrainingData.add(newEar);
-            trainMode = false;
-            mTrainFinishedListener.onEvent();
+            if (mTimer != null) {
+                mTimer.cancel();
+            }
+            mTimer = new CountDownTimer(200, 100) {
+                @Override
+                public void onTick(long l) {}
+
+                @Override
+                public void onFinish() {
+                    mTrainingData.add(newEar);
+                    trainMode = false;
+                    mTrainFinishedListener.onEvent();
+                }
+            }.start();
         }
         // Check if this is a correct ear
         if (!trainMode) {
