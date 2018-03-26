@@ -22,7 +22,7 @@ import java.util.Map;
 public class EarTouchArea extends View {
     private LinkedHashMap<Integer, Tuple> mTouchPoints;
     private Paint mBackgroundPaint, mTouchPointPaint, mLinePaint;
-    private Paint mValuePaint, mGreenPaint, mRedPaint;
+    private Paint mValuePaint, mGreenPaint, mGreenTextPaint, mRedPaint, mRedTextPaint;
     private boolean earPossible;
     private Rect wholeCanvasRect;
     private Tuple top_point = new Tuple(0, 0);
@@ -36,6 +36,7 @@ public class EarTouchArea extends View {
     private Tuple maxDwStart = new Tuple(0, 0);
     private boolean trainMode = false;
     private LinkedList<EarDataset> mTrainingData = new LinkedList<>();
+    private boolean earRecognized = false;
     OnTrainFinishedEventListener mTrainFinishedListener;
 
     public EarTouchArea(Context context, AttributeSet attrs) {
@@ -71,6 +72,20 @@ public class EarTouchArea extends View {
         mValuePaint.setTextSize(48);
         mValuePaint.setTypeface(Typeface.create(Typeface.SERIF, Typeface.NORMAL));
         mValuePaint.setColor(0xffffffff);
+        mGreenPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mGreenPaint.setColor(0xff00e200);
+        mGreenPaint.setStrokeWidth(8);
+        mGreenPaint.setStyle(Paint.Style.STROKE);
+        mGreenTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mGreenTextPaint.setTextSize(72);
+        mGreenTextPaint.setColor(0xff00e200);
+        mRedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mRedPaint.setColor(0xffe20000);
+        mRedPaint.setStrokeWidth(8);
+        mRedPaint.setStyle(Paint.Style.STROKE);
+        mRedTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mRedTextPaint.setTextSize(72);
+        mRedTextPaint.setColor(0xffe20000);
         mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mBackgroundPaint.setStyle(Paint.Style.FILL);
         mBackgroundPaint.setColor(0xff000000);
@@ -145,14 +160,15 @@ public class EarTouchArea extends View {
                         Math.max(maxDw/maxDwDh, -1*minDw/minDwDh))),
                 canvas.getWidth()/2,
                 canvas.getHeight()-60, mValuePaint);
-
-        /*int paddingLeft = getPaddingLeft();
-        int paddingTop = getPaddingTop();
-        int paddingRight = getPaddingRight();
-        int paddingBottom = getPaddingBottom();
-
-        int contentWidth = getWidth() - paddingLeft - paddingRight;
-        int contentHeight = getHeight() - paddingTop - paddingBottom;*/
+        if (earRecognized) {
+            canvas.drawRect(80, canvas.getHeight() - 175,
+                    300, canvas.getHeight() - 75, mGreenPaint);
+            canvas.drawText("OHR1", 100, canvas.getHeight() - 100, mGreenTextPaint);
+        } else {
+            canvas.drawRect(80, canvas.getHeight() - 175,
+                    263, canvas.getHeight() - 75, mRedPaint);
+            canvas.drawText("NAE", 100, canvas.getHeight() - 100, mRedTextPaint);
+        }
     }
 
     @Override
@@ -247,7 +263,10 @@ public class EarTouchArea extends View {
             }
             //Log.d("Min ear err", Float.toString(minErr));
             if (minErr < 0.01) {
+                earRecognized = true;
                 Log.d("Ear Recognized! Error: ", Float.toString(minErr));
+            } else {
+                earRecognized = false;
             }
         }
     }
