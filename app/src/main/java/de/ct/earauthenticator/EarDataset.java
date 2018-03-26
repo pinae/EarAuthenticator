@@ -16,7 +16,7 @@ public class EarDataset {
     public float maxDw = 0;
     public float maxDwDh = 0;
 
-    public EarDataset(float h, float minDw, float minDwDh, float maxDw, float maxDwDh) {
+    EarDataset(float h, float minDw, float minDwDh, float maxDw, float maxDwDh) {
         this.h = h;
         this.minDw = minDw;
         this.minDwDh = minDwDh;
@@ -24,7 +24,7 @@ public class EarDataset {
         this.maxDwDh = maxDwDh;
     }
 
-    public EarDataset(String serializedDataset) {
+    EarDataset(String serializedDataset) {
         Pattern p = Pattern.compile("^h:\\s*(-?\\d+\\.?(?:\\d*)?)\\s*," +
                 "\\s+min d_w:\\s*(-?\\d+\\.?(?:\\d*)?)\\s*," +
                 "\\s*min d_w_d_h:\\s*(-?\\d+\\.?(?:\\d*)?)\\s*," +
@@ -46,7 +46,7 @@ public class EarDataset {
         return x*x;
     }
 
-    public float squaredNormalizedError(EarDataset x) {
+    float squaredNormalizedError(EarDataset x) {
         return sq(h/900-x.h/900) +
                 sq(minDw-x.minDw) + sq(minDwDh-x.minDwDh) +
                 sq(maxDw-x.maxDw) + sq(maxDwDh-x.maxDwDh);
