@@ -1,5 +1,10 @@
 package de.ct.earauthenticator;
 
+import android.util.Log;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Ear data sets wrap 5 values: height, and two dimensional values to the right an left
  */
@@ -17,6 +22,24 @@ public class EarDataset {
         this.minDwDh = minDwDh;
         this.maxDw = maxDw;
         this.maxDwDh = maxDwDh;
+    }
+
+    public EarDataset(String serializedDataset) {
+        Pattern p = Pattern.compile("^h:\\s*(-?\\d+\\.?(?:\\d*)?)\\s*," +
+                "\\s+min d_w:\\s*(-?\\d+\\.?(?:\\d*)?)\\s*," +
+                "\\s*min d_w_d_h:\\s*(-?\\d+\\.?(?:\\d*)?)\\s*," +
+                "\\s*max d_w:\\s+(-?\\d+\\.?(?:\\d*)?)\\s*," +
+                "\\s*max d_w_d_h:\\s*(-?\\d+\\.?(?:\\d*)?)\\s*$");
+        Matcher m = p.matcher(serializedDataset);
+        if (m.matches()) {
+            this.h = Float.parseFloat(m.group(1));
+            this.minDw = Float.parseFloat(m.group(2));
+            this.minDwDh = Float.parseFloat(m.group(3));
+            this.maxDw = Float.parseFloat(m.group(4));
+            this.maxDwDh = Float.parseFloat(m.group(5));
+        } else {
+            Log.e("Loading ear data failed", serializedDataset);
+        }
     }
 
     private float sq(float x) {

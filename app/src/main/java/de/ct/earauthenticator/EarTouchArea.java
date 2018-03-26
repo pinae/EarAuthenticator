@@ -312,4 +312,12 @@ public class EarTouchArea extends View {
     public void startTrainMode() {
         trainMode = true;
     }
+
+    public LinkedList<EarDataset> getTrainingData() {
+        return mTrainingData;
+    }
+
+    public void setTrainingData(LinkedList<EarDataset> newDataset) {
+        mTrainingData = newDataset;
+    }
 }

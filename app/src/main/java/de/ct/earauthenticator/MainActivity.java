@@ -1,6 +1,7 @@
 package de.ct.earauthenticator;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -15,6 +16,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+
+import java.util.LinkedList;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private SensorManager mSensorManager;
@@ -45,8 +49,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onEvent() {
                 plusButton.setVisibility(View.VISIBLE);
-                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                saveTrainingData();
                 // Vibrate for 250 milliseconds
+                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     v.vibrate(VibrationEffect.createOneShot(250,
                             VibrationEffect.DEFAULT_AMPLITUDE));
@@ -58,10 +63,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
     }
 
+    private void saveTrainingData() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        LinkedList<EarDataset> trainingData = mEarTouchArea.getTrainingData();
+        for (int i=0; i < trainingData.size(); i++) {
+            editor.putString("data " + Integer.toString(i),
+                    trainingData.get(i).toString());
+        }
+        editor.apply();
+    }
+
+    private void loadTrainingData() {
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        LinkedList<EarDataset> dataset = new LinkedList<>();
+        Map<String, ?> prefs = sharedPref.getAll();
+        for (Map.Entry<String, ?> entry1 : prefs.entrySet()) {
+            String key = entry1.getKey();
+            if (key.matches("data \\d+")) {
+                EarDataset d = new EarDataset((String) entry1.getValue());
+                dataset.add(d);
+            }
+        }
+        mEarTouchArea.setTrainingData(dataset);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, mProximity, SensorManager.SENSOR_DELAY_NORMAL);
+        loadTrainingData();
     }
 
     @Override
