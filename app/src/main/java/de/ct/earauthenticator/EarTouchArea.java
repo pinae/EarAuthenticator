@@ -284,7 +284,7 @@ public class EarTouchArea extends View {
                 }
             }
             //Log.d("Min ear err", Float.toString(minErr));
-            if (minErr < 0.005 && earPossible) {
+            if (minErr < 0.01 && earPossible) {
                 earRecognized = true;
                 Log.d("Ear Recognized! Error ", Float.toString(minErr));
                 mEarVerifiedListener.onEvent();
