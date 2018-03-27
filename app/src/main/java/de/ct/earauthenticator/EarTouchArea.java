@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public class EarTouchArea extends View {
     private LinkedHashMap<Integer, Tuple> mTouchPoints;
-    private Paint mBackgroundPaint, mTouchPointPaint, mLinePaint;
+    private Paint mBackgroundPaint, mBackHintPaint, mTouchPointPaint, mLinePaint;
     private Paint mValuePaint, mGreenPaint, mGreenTextPaint, mRedPaint, mRedTextPaint;
     private boolean earPossible;
     private Rect wholeCanvasRect;
@@ -92,6 +92,9 @@ public class EarTouchArea extends View {
         mBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mBackgroundPaint.setStyle(Paint.Style.FILL);
         mBackgroundPaint.setColor(0xff000000);
+        mBackHintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mBackHintPaint.setTextSize(400);
+        mBackHintPaint.setColor(0xff000000 + Math.round(mTrainingData.size()/3) * 0x00010101);
         wholeCanvasRect = new Rect(0, 0, getWidth(), getHeight());
     }
 
@@ -115,6 +118,14 @@ public class EarTouchArea extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawRect(wholeCanvasRect, mBackgroundPaint);
+        canvas.drawText("A", 2, 700, mBackHintPaint);
+        canvas.drawText("L", 820, 700, mBackHintPaint);
+        canvas.drawText("RI", 480, 700, mBackHintPaint);
+        canvas.drawText("P", 250, 700, mBackHintPaint);
+        canvas.drawText("P  I", 260, 1000, mBackHintPaint);
+        canvas.drawText("A", 2, 1000, mBackHintPaint);
+        canvas.drawText("L", 800, 1000, mBackHintPaint);
+        canvas.drawText("R", 480, 1000, mBackHintPaint);
         // Draw touch points
         for (Map.Entry<Integer, Tuple> entry : mTouchPoints.entrySet()) {
             //int key = entry.getKey();
@@ -269,6 +280,8 @@ public class EarTouchArea extends View {
                 @Override
                 public void onFinish() {
                     mTrainingData.add(newEar);
+                    mBackHintPaint.setColor(
+                            0xff000000 + Math.round(mTrainingData.size()/3) * 0x00010101);
                     trainMode = false;
                     mTrainFinishedListener.onEvent();
                 }
@@ -342,5 +355,8 @@ public class EarTouchArea extends View {
 
     public void setTrainingData(LinkedList<EarDataset> newDataset) {
         mTrainingData = newDataset;
+        mBackHintPaint.setColor(0xff000000 + Math.round(mTrainingData.size()/3) * 0x00010101);
+        invalidate();
+        requestLayout();
     }
 }
